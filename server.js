@@ -8,10 +8,14 @@
 
 //require express in our app
 var express = require('express'),
-  bodyParser = require('body-parser');
+  bodyParser = require('body-parser'),
+  mongoose = require('mongoose');
+   db = require('./models');
 
 // generate a new express app and call it 'app'
 var app = express();
+
+
 
 // serve static files in public
 app.use(express.static('public'));
@@ -25,32 +29,32 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //  DATA
 ///////////////////
 
-var books = [
-  {
-    _id: 15,
-    title: "The Four Hour Workweek",
-    author: "Tim Ferriss",
-    image: "https://s3-us-west-2.amazonaws.com/sandboxapi/four_hour_work_week.jpg",
-    release_date: "April 1, 2007"
-  },
-  {
-    _id: 16,
-    title: "Of Mice and Men",
-    author: "John Steinbeck",
-    image: "https://s3-us-west-2.amazonaws.com/sandboxapi/of_mice_and_men.jpg",
-    release_date: "Unknown 1937"
-  },
-  {
-    _id: 17,
-    title: "Romeo and Juliet",
-    author: "William Shakespeare",
-    image: "https://s3-us-west-2.amazonaws.com/sandboxapi/romeo_and_juliet.jpg",
-    release_date: "Unknown 1597"
-  }
-];
-
-
-
+// var books = [
+//   {
+//     _id: 15,
+//     title: "The Four Hour Workweek",
+//     author: "Tim Ferriss",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/four_hour_work_week.jpg",
+//     release_date: "April 1, 2007"
+//   },
+//   {
+//     _id: 16,
+//     title: "Of Mice and Men",
+//     author: "John Steinbeck",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/of_mice_and_men.jpg",
+//     release_date: "Unknown 1937"
+//   },
+//   {
+//     _id: 17,
+//     title: "Romeo and Juliet",
+//     author: "William Shakespeare",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/romeo_and_juliet.jpg",
+//     release_date: "Unknown 1597"
+//   }
+// ];
+//
+//
+//
 
 
 
@@ -70,47 +74,84 @@ app.get('/', function (req, res) {
 // get all books
 app.get('/api/books', function (req, res) {
   // send all books as JSON response
-  console.log('books index');
+  db.Book.find(function(err, books){
+  if (err) { return console.log("index error: " + err); }
   res.json(books);
 });
-
+});
+// var Book = req.params.books_list;
+// Book.find({}, function(err, success){
+//   if(err) {return console.log(err);}
+//   res.json(success);
+// });
+// });
 // get one book
 app.get('/api/books/:id', function (req, res) {
   // find one book by its id
-  console.log('books show', req.params);
-  for(var i=0; i < books.length; i++) {
-    if (books[i]._id === req.params.id) {
-      res.json(books[i]);
-      break; // we found the right book, we can stop searching
-    }
-  }
+//   console.log('books show', req.params);
+//   for(var i=0; i < books.length; i++) {
+//     if (books[i]._id === req.params.id) {
+//       res.json(books[i]);
+//       break; // we found the right book, we can stop searching
+//     }
+//   }
+// });
+db.Book.findOneAndRemove({title: "The Great Gatsby"}, function(err, books){
+if (err) { return console.log("index error: " + err); }
+res.json(books);
+});
 });
 
 // create new book
 app.post('/api/books', function (req, res) {
   // create new book with form data (`req.body`)
-  console.log('books create', req.body);
-  var newBook = req.body;
-  books.push(newBook);
-  res.json(newBook);
+  // console.log('books create', req.body);
+  var newBook = new db.Book( req.body);
+  newBook.save(newBook, function (err,success) {
+    if(err) {return console.log(err);}
+    res.json(success);
+  });
 });
 
+  // books.push(newBook);
+  // res.json(newBook);
+//   db.Book.insert (
+//     {
+//     title: "The Great Gatsby",
+//     author: "F Scott Fitzgerald",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/great_gatsby.jpg",
+//     releaseDate: "April 10, 1925"
+//     }
+//   );
+//   db.Book.save(function(err, newPerson){
+//       if(err) {return console.log(err);}
+//       console.log("saved new book: ", newBook);
+//       res.json(books);
+// });
+
+
+
+
 // update book
-// app.put('/api/books/:id', controllers.books.update);
+ // app.put('/api/books/:id', controllers.books.update);
 
 // delete book
 app.delete('/api/books/:id', function (req, res) {
   // get book id from url params (`req.params`)
-  console.log('books delete', req.params);
-  var bookId = req.params.id;
-  // find the index of the book we want to remove
-  var deleteBookIndex = books.findIndex(function(element, index) {
-    return (element._id === parseInt(req.params.id)); //params are strings
+  // console.log('books delete', req.params);
+  // var bookId = req.params.id;
+  // // find the index of the book we want to remove
+  // var deleteBookIndex = books.findIndex(function(element, index) {
+  //   return (element._id === parseInt(req.params.id)); //params are strings
+  // });
+  // console.log('deleting book with index', deleteBookIndex);
+  // var bookToDelete = books[deleteBookIndex];
+  // books.splice(deleteBookIndex, 1);
+  // res.json(bookToDelete);
+db.Book.remove({author: "Harper Lee",}, function(err, newPerson){
+    if(err) {return console.log(err);}
+    console.log("saved new person: ", newPerson);
   });
-  console.log('deleting book with index', deleteBookIndex);
-  var bookToDelete = books[deleteBookIndex];
-  books.splice(deleteBookIndex, 1);
-  res.json(bookToDelete);
 });
 
 
